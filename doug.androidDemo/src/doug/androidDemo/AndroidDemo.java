@@ -14,9 +14,14 @@ public class AndroidDemo extends Activity {
         LinearLayout layout = new LinearLayout(this);
         
         TextView text = new TextView(this);
-        text.setText("Hi there");
+        text.setText("2 + 5 = " + add(2, 5));
         layout.addView(text);
         
         setContentView(layout);
     }
+    
+    static {
+    	System.loadLibrary("AndroidDemo");
+    }
+    private native int add(int x, int y);
 }
