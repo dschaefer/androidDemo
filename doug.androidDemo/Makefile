@@ -45,7 +45,7 @@ $(LIB):	$(SYMS)
 # Link the objects into the symbol library
 $(SYMS):	$(OBJS)
 	@mkdir -p $(dir $@)
-	$(ANDROID_TOOL_PREFIX)ld $(ANDROID_LDFLAGS) -o $(SYMS) $(OBJS) $(LIBS) $(ANDROID_LIBS)
+	$(ANDROID_TOOL_PREFIX)ld $(ANDROID_LDFLAGS) -o $(SYMS) $(OBJS) $(ANDROID_LIBS)
 
 # Compile also generating dependencies with -MD
 obj/%.o:	native/%.cpp
