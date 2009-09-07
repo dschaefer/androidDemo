@@ -1,4 +1,7 @@
-# This is the only thing you need to configure, the name of the native library
+# The path (cygwin) to the NDK
+ANDROID_NDK_BASE = /cygdrive/c/android/android-ndk-1.5_r1
+
+# The name of the native library
 LIBNAME = libAndroidDemo.so
 
 # Find all the C++ sources in the native folder
@@ -13,19 +16,26 @@ SYMS	= obj/$(LIBNAME)
 # The real native library stripped of symbols
 LIB		= libs/armeabi/$(LIBNAME)
 
-# Default CDT target is all
-all:	$(LIB)
-
-# Android toolchain path
-ANDROID_NDK_BASE = /cygdrive/c/android/android-ndk-1.5_r1
+# Android toolchain prefix
 ANDROID_TOOL_PREFIX = $(ANDROID_NDK_BASE)/build/prebuilt/windows/arm-eabi-4.2.1/bin/arm-eabi-
 
-# Android compilation flags
+# Android compiler flags
 ANDROID_CFLAGS = -march=armv5te -mtune=xscale -msoft-float -fpic -mthumb-interwork \
-	-ffunction-sections -funwind-tables -fstack-protector -fno-short-enums \
-	-fno-exceptions -fno-rtti \
-	-D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ -DANDROID -O2 -DNDEBUG -g \
-	-I$(ANDROID_NDK_BASE)/build/platforms/android-1.5/arch-arm/usr/include
+		-ffunction-sections -funwind-tables -fstack-protector -fno-short-enums \
+		-fno-exceptions -fno-rtti \
+		-D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ -DANDROID -O2 -DNDEBUG -g \
+		-I$(ANDROID_NDK_BASE)/build/platforms/android-1.5/arch-arm/usr/include
+
+# Android link flags
+ANDROID_LDFLAGS = -nostdlib -shared -Bsymbolic --no-undefined
+
+# Android lib dir and libs
+ANDROID_LIBS = -L$(ANDROID_NDK_BASE)/build/platforms/android-1.5/arch-arm/usr/lib \
+		-llog -lc -lstdc++ -lm \
+		$(ANDROID_NDK_BASE)/build/prebuilt/windows/arm-eabi-4.2.1/lib/gcc/arm-eabi/4.2.1/interwork/libgcc.a
+
+# Default CDT target is all, build the native library
+all:	$(LIB)
 
 # Strip the symbols to create the runtime library
 $(LIB):	$(SYMS)
@@ -35,17 +45,12 @@ $(LIB):	$(SYMS)
 # Link the objects into the symbol library
 $(SYMS):	$(OBJS)
 	@mkdir -p $(dir $@)
-	$(ANDROID_TOOL_PREFIX)ld \
-		-nostdlib -shared -Bsymbolic --no-undefined \
-		-o $(SYMS) $(OBJS) $(LIBS) \
-		-L$(ANDROID_NDK_BASE)/build/platforms/android-1.5/arch-arm/usr/lib \
-		-llog -lc -lstdc++ -lm \
-		$(ANDROID_NDK_BASE)/build/prebuilt/windows/arm-eabi-4.2.1/lib/gcc/arm-eabi/4.2.1/interwork/libgcc.a
+	$(ANDROID_TOOL_PREFIX)ld $(ANDROID_LDFLAGS) -o $(SYMS) $(OBJS) $(LIBS) $(ANDROID_LIBS)
 
 # Compile also generating dependencies with -MD
 obj/%.o:	native/%.cpp
 	@mkdir -p $(dir $@)
-	$(ANDROID_TOOL_PREFIX)g++ $(CFLAGS) $(ANDROID_CFLAGS) -MD -o $@ -c $<
+	$(ANDROID_TOOL_PREFIX)g++ $(ANDROID_CFLAGS) -MD -o $@ -c $<
 
 # Optionally include the generated dependencies
 -include $(OBJS:%.o=%.d)
